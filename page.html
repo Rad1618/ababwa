@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type='text/javascript' src='https://cdn.scaledrone.com/scaledrone.min.js'></script>
+  <!--<script type='text/javascript' src='http://0.0.0.0:8080/scaledrone.js'></script>-->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <style>
+      body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 13px;
+      display: flex;
+      flex-direction: column;
+      max-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .members-count,
+    .fractions-list,
+    .messages {
+      border: 1px solid #e4e4e4;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    .messages {
+      flex-shrink: 1;
+      overflow: auto;
+    }
+
+    .message {
+      padding: 5px 0;
+    }
+
+    .member {
+      padding: 5px 0;
+      padding-right: 10px;
+      position: relative;
+    }
+
+    .message .member {
+      display: inline-block;
+    }
+
+
+
+    .message-form {
+      display: flex;
+      flex-shrink: 0;
+    }
+
+    .message-form__input {
+      flex-grow: 1;
+      border: 1px solid #dfdfdf;
+      padding: 10px 15px;
+      font-size: 16px;
+    }
+
+    .message-form__button {
+      margin: 10px;
+    }
+
+    .button {
+      border-radius: 10px;
+      border: 1px solid #4e6096;
+      width: 200px;
+      display: inline-block;
+      cursor: pointer;
+      color: #ffffff;
+      font-family: Arial;
+      font-size: 19px;
+      padding: 8px 16px;
+      text-decoration: none;
+      text-shadow: 0px 1px 0px #283966;
+      margin: 8px;
+    }
+
+    .button:active {
+      position: relative;
+      top: 1px;
+    }      
+  
+  </style>
+</head>
+<body>
+  <div class="members-count">-</div>
+  <div class="fractions-list">-</div>
+  <div class="messages"></div>
+  <form class="message-form" onsubmit="return false;">
+    <input class="message-form__input" placeholder="Wpisz wiadomość.." type="text"/>
+    <input class="message-form__button" value="Send" type="button"/>
+  </form>
+  
+  <table style="width: 0px">
+    <tr>
+      <td><button type="button" id="button1">Przycisk 1!</button></td>
+      <td><button type="button" id="button2">Przycisk 2!</button></td>
+    </tr>
+  </table> 
+  
+  
+  <script src="./script.js"></script>
+  
+</body>
+</html>
