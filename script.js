@@ -4,34 +4,34 @@ const ROOM_NAME = 'main'
 
 const DOM = 
 {
-  membersCount: document.querySelector('.members-count'),
-  fractions_list: document.querySelector('.fractions-list'),
-  messages: document.querySelector('.messages'),
-  input: document.querySelector('.message-form__input'),
-  form: document.querySelector('.message-form'),
-  button1: document.querySelector('#button1'),
-  button2: document.querySelector('#button2'),
+  chat: document.getElementById('message_window'),
+  message_form: document.getElementById('message_form'),
+  message_button: document.getElementById('button_send'),
+  button1: document.getElementById('button1'),
+  users_info: document.getElementById('users_info'),
 };
 
 const drone = new ScaleDrone(CLIENT_ID, 
 {
   data: 
   { // Will be sent out as clientData via events
-    //name: prompt("Wpisz swoje imie:"),
-    name: 'Test'
+    name: prompt("Wpisz swoje imie:"),
+    //name: 'Test'
   },
 });
 
 let members = [];
 
-drone.on('open', error => {
-  if (error) {
+drone.on('open', function(error) 
+{
+  if (error) 
+  {
     return console.error(error);
   }
   console.log('Połączono ze Scaledrone');
 
   const room = drone.subscribe('observable-' + ROOM_NAME);
-  room.on('open', error => 
+  room.on('open', function(error) 
   {
     if (error) 
     {
@@ -40,21 +40,15 @@ drone.on('open', error => {
     console.log('Successfully joined room');
   });
 
-  room.on('members', m => 
+  room.on('members', function(m) 
   {
     members = m;
-    if (members.length === 1) 
-    {
-      state.received = true
-    }
     updateMembersDOM();
-    Update_Fractions();
   });
 
-  room.on('member_join', member => 
+  room.on('member_join', function(member) 
   {
     members.push(member);
-    Update_Fractions();
     updateMembersDOM();
   });
 
@@ -67,41 +61,45 @@ drone.on('open', error => {
       updateMembersDOM();
     });
 
-  room.on('data', (message, member) => 
+  room.on('data', function(message, member) 
   {
-    if (member) {
-      switch (message.type) {
+    if (member) 
+    {
+      switch (message.type) 
+      {
         case 'general':
           addMessageToListDOM(message.content, member);
           break;
       }
-    } else {
+    } 
+    else 
+    {
       // Wiadomośc od serwera, ignorujemy
     }
   });
 });
 
-drone.on('close', event => 
+drone.on('close', function(event) 
 {
   console.log('Connection was closed', event);
 });
 
-drone.on('error', error => 
+drone.on('error', function(error) 
 {
   console.error(error);
 });
 
 //Reackje na przyciski
-DOM.form.addEventListener('submit', sendFormMessage);
+DOM.message_button.addEventListener('click', sendFormMessage);
 
 function sendFormMessage() 
 {
-  const value = DOM.input.value;
+  const value = DOM.message_form.value;
   if (value === '') 
   {
     return;
   }
-  sendMessage('general', DOM.input.value)
+  sendMessage('general', DOM.message_form.value)
   DOM.input.value = '';
 }
 
@@ -115,9 +113,11 @@ function button1Reaction()
 
 function sendMessage(inputType, inputContent) 
 {
-  drone.publish({
+  drone.publish(
+  {
     room: 'observable-' + ROOM_NAME,
-    message: {
+    message: 
+    {
       type: inputType,
       content: inputContent,
     },
@@ -131,30 +131,21 @@ function createMemberElement(member)
   const el = document.createElement('div');
   el.appendChild(document.createTextNode(member.clientData.name));
   el.style = 'color:blue';
-  el.className = 'member';
+  el.className = 'message';
   return el;
 }
 
 function updateMembersDOM() 
 {
-  DOM.membersCount.innerText = ``;
-  DOM.membersCount.appendChild(Create_Text(`${members.length} użytkowników w pokoju:`, 'color:black'));
+  DOM.users_info.innerText = ``;
+  DOM.users_info.appendChild(Create_Text(`${members.length} użytkowników w pokoju:`, 'color:black'));
   members.forEach(member =>
-    DOM.membersCount.appendChild(createMemberElement(member)));
-}
-
-function Update_Fractions() 
-{
-  DOM.fractions_list.innerText = ``;
-  DOM.fractions_list.appendChild(Create_Text('Książę Ali', 'color:Blue'));
-  DOM.fractions_list.appendChild(Create_Text('Gildia Kupiecka', 'color:LimeGreen'));
-  DOM.fractions_list.appendChild(Create_Text('Państwo Al\'Harb', 'color:Red'));
-  DOM.fractions_list.appendChild(Create_Text('Marva Ahmadi', 'color:Purple'));
+    DOM.users_info.appendChild(createMemberElement(member)));
 }
 
 function createMessageElement(text, member) 
 {
-  const el = document.createElement('div');
+  const el = document.createElement('message');
   el.appendChild(createMemberElement(member));
   el.appendChild(document.createTextNode(text));
   el.className = 'message';
@@ -163,7 +154,7 @@ function createMessageElement(text, member)
 
 function Create_Text(text, color)
 {
-	const el = document.createElement('div');
+  const el = document.createElement('div');
   el.appendChild(document.createTextNode(text));
   el.style = color;
   el.className = 'message';
@@ -172,10 +163,11 @@ function Create_Text(text, color)
 
 function addMessageToListDOM(text, member) 
 {
-  const el = DOM.messages;
+  const el = DOM.chat;
   const wasTop = el.scrollTop === el.scrollHeight - el.clientHeight;
   el.appendChild(createMessageElement(text, member));
-  if (wasTop) {
+  if (wasTop) 
+  {
     el.scrollTop = el.scrollHeight - el.clientHeight;
   }
 }
