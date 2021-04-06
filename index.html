@@ -9,7 +9,6 @@
             <!--border: 1px solid black;-->
         }
         td {
-            text-align: left;
             vertical-align: central;
         }
         body {
@@ -55,12 +54,12 @@
         }
     </style>
 </head>
-<body onload="Draw();">
+<body onload="Draw();" onbeforeunload="Before_closing();">
     <p>Plac budowy Chińczyka ababwańskiego.</p>
     <table style="width: 0px">
         <tr>
             <td colspan="2"><p class="chat" id="message_window"></p></td>
-            <td rowspan="5" width="350"></td>
+            <td rowspan="4" width="350"></td>
             <td rowspan="5"><canvas id="plansza" height="600" width="600"></canvas></td>
         </tr>
         <tr>
@@ -68,17 +67,20 @@
             <td width="100"><button type="button" id="button_send">Send</button></td>
         </tr>
         <tr>
-            <td colspan="2"><button type="button" id="button1">Kliknij mnie!</button></td>
+            <td colspan="2"><button type="button" id="button1">Opuść frakcję</button></td>
         </tr>
         <tr>
             <td colspan="2"><p class="chat" id="users_info"></p></td>
         </tr>
         <tr>
-            <td height="300" valign="top">
+            <td colspan="2" height="300" valign="top">
                 <p class="char" id="window_frakcje"></p>
+                <button type="button" id="end_turn">Zakończ turę</button>
             </td>
+            <td align="right" valign="bottom"><canvas id="kosc" height="130" width="100"></canvas></td>
         </tr>
     </table>
     <script src="./script.js"></script>
+    <script src="./game.js"></script>
 </body>
 </html>
