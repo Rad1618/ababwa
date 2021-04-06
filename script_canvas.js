@@ -1,14 +1,34 @@
 // JavaScript source code
 function Draw()
 {
-    var canvas = document.getElementById("plansza");
-    if (canvas.getContext)
-    {
-        var ctx = canvas.getContext('2d');
-        ctx.lineCap = 'round';  //ustawienia początkowe
+    Draw_board();   //rysowanie planszy
+    Draw_dice(6, 0);   //rysowanie kości z sześcioma oczkami
+}
 
-        ctx.strokeRect(275, 275, 50, 50);   //środek planszy
-        ctx.strokeRect(275, 75, 50, 200);
+function Draw_board() 
+{
+    if (DOM.board.getContext) 
+    {
+        var ctx = DOM.board.getContext('2d');
+        ctx.clearRect(0, 0, 600, 600);
+        ctx.fillStyle = 'rgb(0, 0, 0)'
+        ctx.lineCap = 'round';  //ustawienia początkowe
+        ctx.lineJoin = 'round';
+
+        if (data_public.game_started)   //rysowanie środka planszy (wskaźnik frakcji na turze)
+        {
+            ctx.fillStyle = Fraction_color(data_public.turn);
+            ctx.fillRect(280, 280, 40, 40);
+            ctx.fillStyle = 'rgb(0, 0, 0)'
+        }
+        else 
+        {
+            ctx.font = '15px arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('START', 300, 300, 100);
+        }
+        ctx.strokeRect(275, 75, 50, 200); //środek planszy
         ctx.strokeRect(75, 275, 200, 50);
         ctx.strokeRect(275, 325, 50, 200);
         ctx.strokeRect(325, 275, 200, 50);
@@ -96,6 +116,61 @@ function Draw()
     }
 }
 
+function Draw_dice(number, rolls) 
+{
+    if (DOM.dice.getContext) 
+    {
+        var ctx = DOM.dice.getContext('2d');
+        ctx.fillStyle = 'rgb(0, 0, 0)';
+        ctx.strokeStyle = 'rgb(0, 0, 0)';
+        if (number != -1) 
+        {
+            ctx.clearRect(0, 0, 100, 130);  //czyszczenie rysunku
+            ctx.lineWidth = 3;
+            ctx.strokeRect(10, 10, 80, 80); //rysowanie obramowania
+
+            if (number === 1 || number === 3 || number === 5)   //środkowe oczko
+                Dot(ctx, 50, 50, 8);
+            if (number === 3 || number === 4 || number === 5 || number === 6)   //reszta oczek
+            {
+                Dot(ctx, 25, 25, 8);
+                Dot(ctx, 75, 75, 8);
+            }
+            if (number === 2 || number === 4 || number === 5 || number === 6) 
+            {
+                Dot(ctx, 75, 25, 8);
+                Dot(ctx, 25, 75, 8);
+            }
+            if (number === 6) 
+            {
+                Dot(ctx, 25, 50, 8);
+                Dot(ctx, 75, 50, 8);
+            }
+        }
+        else
+            ctx.clearRect(0, 100, 100, 30);
+
+        ctx.lineWidth = 1;
+        if (data_private.can_dice)  //różny kolor w zależności, czy można rzucić
+        {
+            ctx.fillStyle = 'rgb(0, 255, 0)';
+            ctx.strokeStyle = 'rgb(0, 255, 0)';
+        }
+        else
+        {
+            ctx.fillStyle = 'rgb(255, 0, 0)';
+            ctx.strokeStyle = 'rgb(255, 0, 0)';
+        }
+        for (i = 0; i < 3; i++) 
+        {
+            if (i >= rolls)
+                ctx.fillRect(10 + 30 * i, 100, 20, 20);
+            else
+                ctx.strokeRect(10 + 30 * i, 100, 20, 20);
+        }
+    }
+}
+
 function Arrow(ctx, start_x, start_y, obr, color)
 {
     var bufor_strokeStyle = ctx.strokeStyle;
@@ -129,7 +204,7 @@ function Arrow(ctx, start_x, start_y, obr, color)
     ctx.beginPath();    //rysowanie lini strzałki
     ctx.moveTo(start_x, start_y);   //ustawianie początku
     ctx.lineTo(start_x + 2 * x, start_y + 2 * y);
-    ctx.moveTo(start_x + 2 * x, start_y + 2 * y);   //potrzebne, aby grot był wygładzony
+    //ctx.moveTo(start_x + 2 * x, start_y + 2 * y);   //potrzebne, aby grot był wygładzony
     ctx.lineTo(start_x + x1, start_y + y1);  //rysowanie grotu strzałki
     ctx.moveTo(start_x + 2 * x, start_y + 2 * y);
     if (obr === 'W' || obr === 'E')
@@ -139,4 +214,11 @@ function Arrow(ctx, start_x, start_y, obr, color)
     ctx.stroke();
     ctx.strokeStyle = bufor_strokeStyle;    //powrót do wcześniejszych ustawień
     ctx.lineWidth = buffor_lineWidth;
+}
+
+function Dot(ctx, poz_x, poz_y, radius)
+{
+    ctx.beginPath();
+    ctx.arc(poz_x, poz_y, radius, 0, 2 * Math.PI, true);
+    ctx.fill();
 }
