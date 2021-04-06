@@ -386,6 +386,13 @@ function Create_normal_message(text, public)
 
 function Before_closing()
 {
+    if (data_private.fraction != -1)
+    {
+        if (data_public.turn === data_private.fraction && data_public.game_started)
+            Send_message('end_turn', null);
+        Send_message('fraction_leave', data_private.fraction);
+        data_private.fraction = -1;
+    }
     if (data_private.host)  //jeśli był hostem przekazuje dane
         Send_message('byby', data_public, drone.clientId);
     else
