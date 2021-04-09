@@ -54,7 +54,7 @@
         }
     </style>
 </head>
-<body onload="Draw();" onbeforeunload="Before_closing();">
+<body onload="Make_tables(); Draw();" onbeforeunload="Before_closing();">
     <p>Plac budowy Chińczyka ababwańskiego.</p>
     <table style="width: 0px">
         <tr>
@@ -76,6 +76,7 @@
             <td colspan="2" height="300" valign="top">
                 <p class="char" id="window_frakcje"></p>
                 <button type="button" id="end_turn">Zakończ turę</button>
+                <p>Aby dołączyć do frakcji kliknij na jej pole startowe.</p>
             </td>
             <td align="right" valign="bottom"><canvas id="kosc" height="130" width="100"></canvas></td>
         </tr>
