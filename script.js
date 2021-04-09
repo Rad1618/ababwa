@@ -262,7 +262,7 @@ drone.on('open', function (error)
                     }
                     break;
                 case 'debug':
-                    /*switch (message.content)
+                    switch (message.content)
                     {
                         case 'dice_six':
                             if (message.recipient)
@@ -276,7 +276,7 @@ drone.on('open', function (error)
                             else
                                 Add_message_to_chat('Wyłączyłem sobie kody na 1 na kości :(', member);
                             break;
-                    }*/
+                    }
                     break;
             }
         }
