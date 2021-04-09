@@ -107,7 +107,7 @@ DOM.board.addEventListener('mousedown', function (e)
         }
     }
 
-    if (e.offsetX >= tables.spaces[6][0] && e.offsetX <= tables.spaces[6][0] + 50       //////////////////////////////////////////
+    /*if (e.offsetX >= tables.spaces[6][0] && e.offsetX <= tables.spaces[6][0] + 50       //////////////////////////////////////////
         && e.offsetY >= tables.spaces[6][1] && e.offsetY <= tables.spaces[6][1] + 50)
     {
         data_private.to_debugging[0] = !data_private.to_debugging[0];
@@ -118,7 +118,7 @@ DOM.board.addEventListener('mousedown', function (e)
     {
         data_private.to_debugging[1] = !data_private.to_debugging[1];
         Send_message('debug', 'dice_one', data_private.to_debugging[1]);
-    }
+    }*/
 });
 
 DOM.leave_fraction.addEventListener('click', function ()
