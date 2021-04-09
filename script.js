@@ -22,6 +22,8 @@ var data_public =
     fractions_id: [null, null, null, null],
     turn: -1,
     game_started: false,
+    pawns: [],
+    ppp: 4,     //pawns per player
 };
 
 const data_private =
@@ -31,7 +33,11 @@ const data_private =
     fraction: -1,
     dice: 0,
     can_dice: false,
+    dice_score: 0,
     can_end_turn: false,
+    board_draw: null,
+    can_move_pawn: [],
+    to_debugging: [false, false],
 };
 
 const drone = new ScaleDrone(CLIENT_ID,
@@ -70,6 +76,7 @@ drone.on('open', function (error)
         members = m;
         if (members.length === 1)
         {
+            Make_pawns();
             data_private.import_chat = true;
             data_private.host = true;   //pierwszy gracz zostaje hostem
             console.log('Miłościwie nam panujący host: ' + members[0].clientData.name);
@@ -173,7 +180,7 @@ drone.on('open', function (error)
                     if (!data_private.host)
                         data_public = message.content;
                     Update_windows();
-                    Draw_board();
+                    Draw_board(data_private.board_draw, data_private.fraction);
                     break;
                 case 'fractions_change':    //na tę wiadomość odpowiada tylko host
                     if (data_private.host)
@@ -239,11 +246,37 @@ drone.on('open', function (error)
                     if (!data_private.host)
                         data_public = message.content;
                     Update_windows();
-                    Draw_board();
+                    Draw_board(data_private.board_draw, data_private.fraction);
                     if (data_public.turn === data_private.fraction) //Teraz Twoja tura
                     {
                         Start_turn();
                     }
+                    break;
+                case 'pawn_move':
+                    if (data_private.host)
+                    {
+                        data_public.pawns[message.content[0]].state = message.content[1];   //zmiana stanu pionka
+                        data_public.pawns[message.content[0]].position_id = message.content[2];    //zmiana położenia pionka
+                        data_public.pawns[message.content[0]].position = tables.spaces[message.content[2]];
+                        Send_message('update', data_public);    //wysłanie informacji o ruchu pozostałym
+                    }
+                    break;
+                case 'debug':
+                    /*switch (message.content)
+                    {
+                        case 'dice_six':
+                            if (message.recipient)
+                                Add_message_to_chat('Włączyłem sobie kody na 6 na kości :)', member);
+                            else
+                                Add_message_to_chat('Wyłączyłem sobie kody na 6 na kości :(', member);
+                            break;
+                        case 'dice_one':
+                            if (message.recipient)
+                                Add_message_to_chat('Włączyłem sobie kody na 1 na kości :)', member);
+                            else
+                                Add_message_to_chat('Wyłączyłem sobie kody na 1 na kości :(', member);
+                            break;
+                    }*/
                     break;
             }
         }
