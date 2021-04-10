@@ -24,6 +24,7 @@ var data_public =
     game_started: false,
     pawns: [],
     ppp: 4,     //pawns per player
+    almutryb: false,
 };
 
 const data_private =
@@ -37,7 +38,7 @@ const data_private =
     can_end_turn: false,
     board_draw: null,
     can_move_pawn: [],
-    to_debugging: [false, false],
+    to_debugging: [0],
 };
 
 const drone = new ScaleDrone(CLIENT_ID,
@@ -239,6 +240,7 @@ drone.on('open', function (error)
                             if (data_public.turn >= 4)
                                 data_public.turn -= 4;
                         } while (data_public.fractions_id[data_public.turn] === null);
+                        Pawns_adjustment(); //poprawainie pozycji pionków
                         Send_message('update_turn', data_public);
                     }
                     break;
@@ -257,24 +259,49 @@ drone.on('open', function (error)
                     {
                         data_public.pawns[message.content[0]].state = message.content[1];   //zmiana stanu pionka
                         data_public.pawns[message.content[0]].position_id = message.content[2];    //zmiana położenia pionka
-                        data_public.pawns[message.content[0]].position = tables.spaces[message.content[2]];
+                        Pawns_adjustment(); //poprawainie pozycji pionków
                         Send_message('update', data_public);    //wysłanie informacji o ruchu pozostałym
+                    }
+                    break;
+                case 'almu_activation':
+                    if (data_private.host)
+                    {
+                        data_public.almutryb = true;
+                        Send_message('bot_chat', 'Tryb almu aktywowany! Miłej zabawy!');
+                        Send_message('update', data_public);
+                    }
+                    break;
+                case 'emergency':  //funkcja na nieprzewidziane sytuacje
+                    if (data_private.host)
+                    {
+                        for (var i1 = 0; i1 < data_public.fractions_id.length; i1++)
+                        {
+                            var impostor = true;
+                            for (var i2 = 0; i2 < members.length; i2++)
+                            {
+                                if (members[i2].id === data_public.fractions_id[i1])    //gracz znaleziony
+                                {
+                                    impostor = false;
+                                    break;
+                                }
+                            }
+                            if (impostor)
+                            {
+                                Send_message('fraction_leave', i1); //wyrzucenie impostora z gry
+                                if (data_public.turn === i1 && data_public.game_started)
+                                    Send_message('end_turn', null);
+                            }
+                        }
                     }
                     break;
                 case 'debug':
                     switch (message.content)
                     {
-                        case 'dice_six':
-                            if (message.recipient)
-                                Add_message_to_chat('Włączyłem sobie kody na 6 na kości :)', member);
+                        case 'dice_roll':
+                            if (message.recipient != 0)
+                                Add_bot_chat('Gracz ' + member.clientData.name + ' włączył sobie kody na ' + message.recipient + ' na kości :)', true);
                             else
-                                Add_message_to_chat('Wyłączyłem sobie kody na 6 na kości :(', member);
-                            break;
-                        case 'dice_one':
-                            if (message.recipient)
-                                Add_message_to_chat('Włączyłem sobie kody na 1 na kości :)', member);
-                            else
-                                Add_message_to_chat('Wyłączyłem sobie kody na 1 na kości :(', member);
+                                Add_bot_chat('Gracz ' + member.clientData.name + ' wyłączył sobie kody na kości :(', true);
                             break;
                     }
                     break;
@@ -320,8 +347,36 @@ function Message_form_confirm()
     {
         return;
     }
-    Send_message('chat', DOM.message_form.value)
+    switch (value)
+    {
+        case '_Almukantarat':
+            Send_message('almu_activation', null);
+            break;
+        case '_emergency':
+            Send_message('emergency', null);
+            break;
+        case '_dice_six':
+            Debug_game_dice(6);
+            break;
+        case '_dice_one':
+            Debug_game_dice(1);
+            break;
+        case '_dice_ten':
+            Debug_game_dice(10);
+            break;
+        default:
+            Send_message('chat', DOM.message_form.value)
+    }
     DOM.message_form.value = '';
+}
+
+function Debug_game_dice(number)
+{
+    if (data_private.to_debugging[0] != number)
+        data_private.to_debugging[0] = number;
+    else
+        data_private.to_debugging[0] = 0;
+    Send_message('debug', 'dice_roll', data_private.to_debugging[0]);
 }
 
 function Send_message(inputType, inputContent, id = null)
