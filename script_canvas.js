@@ -40,7 +40,7 @@ function Draw_board(pawns_mode, fraction)
         for (var i = 0; i < 72; i++)    //rysowanie obramówek pól
             ctx.strokeRect(tables.spaces[i][0], tables.spaces[i][1], 50, 50);
 
-        Draw_pawns(ctx, pawns_mode, fraction);    //rysowanie pionków
+        Draw_pawns(ctx, pawns_mode, fraction);    //rysowanie pionków;
     }
 }
 
@@ -74,6 +74,13 @@ function Draw_dice(number, rolls)
                 Dot(ctx, 25, 50, 8);
                 Dot(ctx, 75, 50, 8);
             }
+            if (number === 10)
+            {
+                ctx.font = '50px arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('10', 50, 50, 60);
+            }
         }
         else
             ctx.clearRect(0, 100, 100, 30);
@@ -105,7 +112,13 @@ function Draw_pawns(ctx, mode, fraction)
     {
         if (i % data_public.ppp === 0)
             ctx.fillStyle = Fraction_color(i / data_public.ppp);
-        Circle(ctx, data_public.pawns[i].position[0] + 25, data_public.pawns[i].position[1] + 25, 15);
+        if (data_public.almutryb)
+        {
+            var size = 50 * data_public.pawns[i].scale;
+            ctx.drawImage(tables.images[i], (50 - size) / 2 + data_public.pawns[i].position[0], (50 - size) / 2 + data_public.pawns[i].position[1], size, size);
+        }
+        else
+            Circle(ctx, data_public.pawns[i].position[0] + 25, data_public.pawns[i].position[1] + 25, 20 * data_public.pawns[i].scale);
         if (i < data_public.ppp)
             data_private.can_move_pawn[i] = false;  //blokowanie możliwości ruchu
     }
@@ -117,7 +130,7 @@ function Draw_pawns(ctx, mode, fraction)
         {
             if (data_public.pawns[fraction * data_public.ppp + i].state === 'play')
             {
-                Dot(ctx, data_public.pawns[fraction * data_public.ppp + i].position[0] + 25, data_public.pawns[fraction * data_public.ppp + i].position[1] + 25, 18);
+                Dot(ctx, data_public.pawns[fraction * data_public.ppp + i].position[0] + 25, data_public.pawns[fraction * data_public.ppp + i].position[1] + 25, 22 * data_public.pawns[fraction * data_public.ppp + i].scale);
                 data_private.can_move_pawn[i] = true;   //może ruszyć się tym pionkiem
             }
         }
@@ -130,12 +143,17 @@ function Draw_pawns(ctx, mode, fraction)
         {
             if (data_public.pawns[fraction * data_public.ppp + i].state === 'home')
             {
-                Dot(ctx, data_public.pawns[fraction * data_public.ppp + i].position[0] + 25, data_public.pawns[fraction * data_public.ppp + i].position[1] + 25, 18);
+                Dot(ctx, data_public.pawns[fraction * data_public.ppp + i].position[0] + 25, data_public.pawns[fraction * data_public.ppp + i].position[1] + 25, 22 * data_public.pawns[fraction * data_public.ppp + i].scale);
                 data_private.can_move_pawn[i] = true;   //może ruszyć się tym pionkiem
             }
         }
         ctx.fillStyle = 'rgb(0, 0, 0)';
     }
+}
+
+function Draw_image(ctx)
+{
+    ctx.drawImage(tables.images[3], 0, 0);
 }
 
 function Arrow(ctx, start_x, start_y, obr, color)
