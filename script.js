@@ -11,8 +11,10 @@ const DOM =
     users_info: document.getElementById('users_info'),
     window_frakcje: document.getElementById('window_frakcje'),
     end_turn: document.getElementById('end_turn'),
-    board: document.getElementById("plansza"),
-    dice: document.getElementById("kosc"),
+    board: document.getElementById('plansza'),
+    dice: document.getElementById('kosc'),
+    gold_dice: document.getElementById('gold_dice'),
+    ability_button: document.getElementById('superpower'),
 };
 
 var data_public =
@@ -20,21 +22,28 @@ var data_public =
     chat_text: [],
     fractions: [null, null, null, null],
     fractions_id: [null, null, null, null],
+    abilities: [2, 2, 1, 3],
+    harb_ability: false,
+    gold_dice: [2, 2, 2, 2],
     turn: -1,
     game_started: false,
+    ending: -1,
     pawns: [],
     ppp: 4,     //pawns per player
     almutryb: false,
+    masons_vis: false,
 };
 
 const data_private =
 {
     host: false,
+    ai: false,
     import_chat: false,
     fraction: -1,
     dice: 0,
     can_dice: false,
     dice_score: 0,
+    gold_dice: 0,
     can_end_turn: false,
     board_draw: null,
     can_move_pawn: [],
@@ -172,7 +181,7 @@ drone.on('open', function (error)
                     break;
                 case 'new_members': //aktualizacja listy członków
                     if (!data_private.host)  //niehosty aktualizują listę
-                    {   
+                    {
                         members = message.content;
                         Update_members();
                     }
@@ -189,10 +198,11 @@ drone.on('open', function (error)
                         if (data_public.fractions[message.content] === null)    //puste miejsce frakcji
                         {
                             if (data_public.turn === message.content && data_public.game_started) //nie można dołączyć do frakcji podczas jej tury
-                            { 
+                            {
                                 Send_message('bot_info', 'Nie możesz dołączyć do frakcji, kiedy jest jej tura.', member.id);
                             }
-                            else {  //gracz może opuścić grę
+                            else
+                            {  //gracz może opuścić grę
                                 data_public.fractions[message.content] = member.clientData.name;    //przypisanie miejsca graczowi
                                 data_public.fractions_id[message.content] = member.id;
                                 Send_message('update', data_public);    //wysłanie informacji o decyzji pozostałym
@@ -226,12 +236,18 @@ drone.on('open', function (error)
                     }
                     break;
                 case 'dice_roll':
+                    data_private.gold_dice = message.content[2];
                     Dice_roll(message.content[0], message.content[1]);
                     break;
                 case 'dice_update':
                     Draw_dice(-1, message.content);
                     break;
                 case 'end_turn':
+                    if (data_private.gold_dice != 0)
+                    {
+                        data_private.gold_dice = 0;
+                        Draw_dice(6, null);
+                    }
                     if (data_private.host)
                     {
                         do
@@ -257,17 +273,82 @@ drone.on('open', function (error)
                 case 'pawn_move':
                     if (data_private.host)
                     {
+                        //console.log('Ruch ' + message.content[0] + ' do ' + message.content[2]);
                         data_public.pawns[message.content[0]].state = message.content[1];   //zmiana stanu pionka
                         data_public.pawns[message.content[0]].position_id = message.content[2];    //zmiana położenia pionka
-                        Pawns_adjustment(); //poprawainie pozycji pionków
+                        var captured = Do_pawn_capture(message.content[0]); //sprawdzanie, czy pionek zbił
+                        if (captured != -1) //nastąpiło bicie
+                        {
+                            if (data_public.abilities[2] > 0 && Math.floor(captured / data_public.ppp) === 2 && !data_public.harb_ability)   //Al'Harb może uniknąć
+                            {
+                                Send_message('bot_chat', 'Oczekiwanie na decyzję Al\'Harb.');
+                                Send_message('bot_info', 'Kliknij na planszę, jeśli nie chcesz używać umiejętności.', data_public.fractions_id[2]);
+                                data_public.harb_ability = true;
+                                Send_message('ai_awake', null, data_public.fractions_id[2]);    //Próba budzenia AI Harbu, jeśli konieczna
+                            }
+                            else
+                            {
+                                data_public.harb_ability = false;
+                                Captured_pawn(captured);    //bicie pionka przeciwnika
+                            }
+                        }
+                        Pawns_adjustment(); //poprawianie pozycji pionków
                         Send_message('update', data_public);    //wysłanie informacji o ruchu pozostałym
+                        if (Count_score(data_public.turn) >= 4) //koniec gry
+                            Send_message('winner', data_public.turn);
+                    }
+                    break;
+                case 'superpower':  //użycie przez kogoś specjalnej umiejętności
+                    if (message.content === 'gold_dice')
+                        data_private.gold_dice = 1;
+                    if (data_private.host)
+                    {
+                        switch (message.content)
+                        {
+                            case 'gold_dice':   //rzut złotą kością
+                                data_public.gold_dice[message.recipient]--;
+                                break;
+                            case 'fraction':
+                                data_public.abilities[message.recipient]--;
+                                if (message.recipient === 2)    //Harb
+                                {
+                                    data_public.harb_ability = false;
+                                    Harb_dodge();   //unik
+                                }
+                                break;
+                            case 'resign':  //Harb rezygnuje z uniku
+                                Harb_resign();
+                                break;
+                        }
+                        Send_message('update', data_public);
+                    }
+                    break;
+                case 'ai_awake':
+                    if (drone.clientId === message.recipient && data_private.ai)    //budzenie AI wybranego gracza
+                        AI_awake(); 
+                    break;
+                case 'winner':
+                    if (data_private.host)
+                    {
+                        var concentration = Masons_in_palace();
+                        if (concentration >= 0.9)
+                            data_public.ending = 8;
+                        else if (Masons_in_palace() >= 0.5)  //połowa ludzi w pałacu to masoni
+                            data_public.ending = message.content * 2 + 1;
+                        else
+                            data_public.ending = message.content * 2;
+                        Send_message('masons', true);   //ujawnienie masonów
+                        Send_message('update', data_public);
                     }
                     break;
                 case 'almu_activation':
                     if (data_private.host)
                     {
-                        data_public.almutryb = true;
-                        Send_message('bot_chat', 'Tryb almu aktywowany! Miłej zabawy!');
+                        data_public.almutryb = !data_public.almutryb;
+                        if (data_public.almutryb)
+                            Send_message('bot_chat', 'Tryb almu aktywowany! Miłej zabawy!');
+                        else
+                            Send_message('bot_chat', 'Koniec tego bydła! Tryb almu wyłączony. :(');
                         Send_message('update', data_public);
                     }
                     break;
@@ -292,6 +373,22 @@ drone.on('open', function (error)
                                     Send_message('end_turn', null);
                             }
                         }
+                    }
+                    break;
+                case 'masons':
+                    if (data_private.host)
+                    {
+                        if (message.content === null)
+                        {
+                            data_public.masons_vis = !data_public.masons_vis;
+                            if (data_public.masons_vis)
+                                Add_bot_chat('Gracz ' + member.clientData.name + ' jest Masonem.', true);
+                            else
+                                Add_bot_chat('Gracz ' + member.clientData.name + ' próbuje udawać, że przestał być Masonem.', true);
+                        }
+                        else
+                            data_public.masons_vis = message.content;
+                        Send_message('update', data_public);
                     }
                     break;
                 case 'debug':
@@ -349,11 +446,26 @@ function Message_form_confirm()
     }
     switch (value)
     {
-        case '_Almukantarat':
+        case '_almu':
             Send_message('almu_activation', null);
+            break;
+        case '_hal2k17':
+            if (data_public.turn != data_private.fraction)
+            {
+                data_private.ai = !data_private.ai;
+                if (data_private.ai)
+                    Add_bot_chat("Właśnie oddałeś kontrolę samoświadomemu komputerowi HAL2k17.");
+                else
+                    Add_bot_chat("Właśnie odebrałeś kontrolę samoświadomemu komputerowi HAL2k17. Jak Ci się to udało!?");
+            }
+            else
+                Add_bot_chat("Przykro mi, w tym momencie dostęp do funckji komputera HAL2k17 jest niemożliwy.");
             break;
         case '_emergency':
             Send_message('emergency', null);
+            break;
+        case '_masons':
+            Send_message('masons', null);
             break;
         case '_dice_six':
             Debug_game_dice(6);
@@ -363,6 +475,12 @@ function Message_form_confirm()
             break;
         case '_dice_ten':
             Debug_game_dice(10);
+            break;
+        case '_dice_ultimate':
+            Debug_game_dice(39);
+            break;
+        case '_winner':
+            Send_message('winner', data_private.fraction);
             break;
         default:
             Send_message('chat', DOM.message_form.value)
@@ -412,16 +530,39 @@ function Update_members()
 function Update_windows()   //odświerzanie ekranu i okien
 {   
     DOM.window_frakcje.innerText = '';
-    var symbol = ['🎲', '♟️', '🛡️', '🧞']; //odświerzanie okna frakcji
-    var count = [2, 2, 1, 3];
-    for (var i = 0; i < 4; i++)
+    if (data_public.ending === -1)
     {
-        text = Fraction_information(i, symbol[i], count[i]);
-        DOM.window_frakcje.appendChild(Create_message_element(text, 'color:' + Fraction_color(i))); 
+        var symbol = ['🎲', '♟️', '🛡️', '🧞']; //odświerzanie okna frakcji
+        for (var i = 0; i < 4; i++)
+        {
+            text = Fraction_information(i, symbol[i], data_public.abilities[i], data_public.gold_dice[i]);
+            DOM.window_frakcje.appendChild(Create_message_element(text, 'color:' + Fraction_color(i)));
+        }
+    }
+    else
+    {
+        var fraction = Math.floor(data_public.ending / 2);
+        var text = 'Zwyciężyła frakcja: ';
+        var color = '';
+        if (data_public.ending % 2 === 0 && data_public.ending < 8)
+        {
+            text += Fraction(fraction);
+            color = 'color:' + Fraction_color(fraction);
+        }
+        else
+        {
+            if (data_public.ending === 8)
+                text += 'Ja i reszta moich kumpli';
+            else
+                text += 'Masoni';
+            color = 'color: rgb(200, 200, 0)';
+        }
+        DOM.window_frakcje.appendChild(Create_message_element(text , color));
+        DOM.window_frakcje.appendChild(Create_message_element(tables.endings[data_public.ending], color));
     }
 }
 
-function Fraction_information(fraction, bonus, bonus_count)
+function Fraction_information(fraction, bonus, bonus_count, gold_dice)
 {
     var text = '';
     if (fraction === data_public.turn && data_public.game_started)
@@ -432,6 +573,8 @@ function Fraction_information(fraction, bonus, bonus_count)
     text += ' ';
     for (var i = 0; i < bonus_count; i++)
         text += bonus;
+    for (var i = 0; i < gold_dice; i++)
+        text += '🍀';
     return text;
 }
 
