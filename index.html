@@ -55,10 +55,13 @@
     </style>
 </head>
 <body onload="Make_tables(); Draw();" onbeforeunload="Before_closing();">
-    <p>Plac budowy Chińczyka ababwańskiego.</p>
     <table style="width: 0px">
         <tr>
-            <td colspan="2"><p class="chat" id="message_window"></p></td>
+            <td colspan="2">
+                <p>Plac budowy Chińczyka ababwańskiego.</p>
+                <p><a href="./lore.html" target="_blank">Fabuła gry</a></p>
+                <p class="chat" id="message_window"></p>
+            </td>
             <td rowspan="4" width="350"></td>
             <td rowspan="5"><canvas id="plansza" height="600" width="600"></canvas></td>
         </tr>
@@ -74,7 +77,9 @@
         </tr>
         <tr>
             <td colspan="2" height="300" valign="top">
-                <p class="char" id="window_frakcje"></p>
+                <p class="chat" id="window_frakcje"></p>
+                <button type="button" id="superpower">Umiejętność</button>
+                <button type="button" id="gold_dice">Złota kość</button>
                 <button type="button" id="end_turn">Zakończ turę</button>
                 <p>Aby dołączyć do frakcji kliknij na jej pole startowe.</p>
             </td>
@@ -83,5 +88,7 @@
     </table>
     <script src="./script.js"></script>
     <script src="./game.js"></script>
+    <script src="./ai.js"></script>
+    <script src="./text.js"></script>
 </body>
 </html>
