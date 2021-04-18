@@ -1,4 +1,5 @@
 // JavaScript source code
+
 function Draw()
 {
     Draw_board(null, null);   //rysowanie planszy
@@ -48,38 +49,66 @@ function Draw_dice(number, rolls)
 {
     if (DOM.dice.getContext) 
     {
+        var gold = false;
+        if (data_private.gold_dice > 0)
+            gold = true;
         var ctx = DOM.dice.getContext('2d');
-        ctx.fillStyle = 'rgb(0, 0, 0)';
-        ctx.strokeStyle = 'rgb(0, 0, 0)';
+        if (gold)
+        {
+            ctx.fillStyle = 'rgb(255, 255, 200)';
+            ctx.strokeStyle = 'rgb(200, 200, 0)';
+        }
+        else
+        {
+            ctx.fillStyle = 'rgb(255, 255, 255)';
+            ctx.strokeStyle = 'rgb(0, 0, 0)';
+        }
         if (number != -1) 
         {
             ctx.clearRect(0, 0, 100, 130);  //czyszczenie rysunku
             ctx.lineWidth = 3;
+            ctx.fillRect(10, 10, 80, 80);
             ctx.strokeRect(10, 10, 80, 80); //rysowanie obramowania
 
-            if (number === 1 || number === 3 || number === 5)   //środkowe oczko
-                Dot(ctx, 50, 50, 8);
-            if (number === 3 || number === 4 || number === 5 || number === 6)   //reszta oczek
+            ctx.fillStyle = ctx.strokeStyle;
+            if (number < 10)
             {
-                Dot(ctx, 25, 25, 8);
-                Dot(ctx, 75, 75, 8);
+                if (number === 1 || number === 3 || number === 5 || number === 7 || number === 9)   //środkowe oczko
+                    Dot(ctx, 50, 50, 8);
+                if (number === 3 || number >= 4)   //reszta oczek
+                {
+                    Dot(ctx, 25, 25, 8);
+                    Dot(ctx, 75, 75, 8);
+                }
+                if (number === 2 || number >= 4) 
+                {
+                    Dot(ctx, 75, 25, 8);
+                    Dot(ctx, 25, 75, 8);
+                }
+                if (number === 6 || number === 8 || number === 9) 
+                {
+                    Dot(ctx, 25, 50, 8);
+                    Dot(ctx, 75, 50, 8);
+                }
+                if (number === 7 || number === 8 || number === 9)
+                {
+                    Dot(ctx, 50, 25, 8);
+                    Dot(ctx, 50, 75, 8);
+                }
             }
-            if (number === 2 || number === 4 || number === 5 || number === 6) 
-            {
-                Dot(ctx, 75, 25, 8);
-                Dot(ctx, 25, 75, 8);
-            }
-            if (number === 6) 
-            {
-                Dot(ctx, 25, 50, 8);
-                Dot(ctx, 75, 50, 8);
-            }
-            if (number === 10)
+            else if (number === 10)
             {
                 ctx.font = '50px arial';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText('10', 50, 50, 60);
+            }
+            else if (number === 39)
+            {
+                ctx.font = '50px arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('39', 50, 50, 60);
             }
         }
         else
@@ -103,6 +132,8 @@ function Draw_dice(number, rolls)
             else
                 ctx.strokeRect(10 + 30 * i, 100, 20, 20);
         }
+        ctx.fillStyle = 'rgb(255, 255, 255)';
+        ctx.strokeStyle = 'rgb(0, 0, 0)';
     }
 }
 
@@ -110,15 +141,19 @@ function Draw_pawns(ctx, mode, fraction)
 {
     for (var i = 0; i < data_public.pawns.length; i++)
     {
+        var size = 50 * data_public.pawns[i].scale;
         if (i % data_public.ppp === 0)
             ctx.fillStyle = Fraction_color(i / data_public.ppp);
         if (data_public.almutryb)
         {
-            var size = 50 * data_public.pawns[i].scale;
             ctx.drawImage(tables.images[i], (50 - size) / 2 + data_public.pawns[i].position[0], (50 - size) / 2 + data_public.pawns[i].position[1], size, size);
         }
         else
             Circle(ctx, data_public.pawns[i].position[0] + 25, data_public.pawns[i].position[1] + 25, 20 * data_public.pawns[i].scale);
+        if (data_public.masons_vis && data_public.pawns[i].mason) //masoni są widoczni
+        {
+            ctx.drawImage(tables.images[data_public.ppp * 4], (50 - size) / 2 + data_public.pawns[i].position[0], (50 - size) / 2 + data_public.pawns[i].position[1], size, size);
+        }
         if (i < data_public.ppp)
             data_private.can_move_pawn[i] = false;  //blokowanie możliwości ruchu
     }
@@ -130,8 +165,11 @@ function Draw_pawns(ctx, mode, fraction)
         {
             if (data_public.pawns[fraction * data_public.ppp + i].state === 'play')
             {
-                Dot(ctx, data_public.pawns[fraction * data_public.ppp + i].position[0] + 25, data_public.pawns[fraction * data_public.ppp + i].position[1] + 25, 22 * data_public.pawns[fraction * data_public.ppp + i].scale);
-                data_private.can_move_pawn[i] = true;   //może ruszyć się tym pionkiem
+                if (Pawn_move_to(fraction * data_public.ppp + i, data_private.dice_score) != -1) //pionek może się ruszyć 
+                {
+                    Dot(ctx, data_public.pawns[fraction * data_public.ppp + i].position[0] + 25, data_public.pawns[fraction * data_public.ppp + i].position[1] + 25, 22 * data_public.pawns[fraction * data_public.ppp + i].scale);
+                    data_private.can_move_pawn[i] = true;   //może ruszyć się tym pionkiem
+                }
             }
         }
         ctx.fillStyle = 'rgb(0, 0, 0)';
