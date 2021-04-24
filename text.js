@@ -20,8 +20,8 @@ function Make_endings()
         'a jej mieszkońców zesłali na ciężką pracę do kopalni Bitcoinów.';
     tables.endings[4] = 'Wojownicy Pańswta Al\'Harb bez trudu pokonali swoich wrogów. Po przejęciu władzy w Ababwie, utworzyli z niej swoje państwo ' +
         'satelickie z marionetkowym władcą na czele. Bogate w zasoby naturalne ziemie Ababwy zaczęły być intensywnie eksploatowane, a pozyskiwane ' +
-        'surowce wysyłane do stolicy Al\'Harb. Potęga wojowników, którzy nie poprzestali swoich podbojów na Ababwie, rosła i wkrótce w całym znanym ' +
-        'świecie zaczęto mówić o nowym, rozrastającym się, Imperium';
+        'surowce wysyłane do stolicy Al\'Harb. Potęga wojowników, którzy nie poprzestali na Ababwie, rosła i wkrótce w całym znanym ' +
+        'świecie zaczęto mówić o nowym, rozrastającym się, Imperium.';
     tables.endings[5] = 'Wojownicy Państwa Al\'Harb bez trudu pokonali swoich wrogów. Jednak nie spostrzegli, że niektórzy dowódcy zostali perfekcyjnie ' +
         'podmienieni. Nikt nie przypuszczał, że nagły wzrost mody na głębokie kaptury wśród wodzów może oznaczać coś groźnego. W ten sposób Masoni ' +
         'przedostali się na dwór sułtana Al\'Harb, gdzie będąc jego doradcami, zyskali olbrzymią władzę. Już niedługo dzięki całej sile wojskowej ' +
